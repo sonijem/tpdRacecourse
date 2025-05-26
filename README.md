@@ -30,3 +30,7 @@ I would use GCP to host and implement TPD's data pipelines.
 - Upsert all hourse_name into horse table
 - Insert data in chunks for races and runner table by getting relavant fkeys.
 - Added logs for better understanding of the code implementation!
+
+### Analytics queries
+
+- Analytics queries added into file **tpd_racecourses_analytics.sql**
