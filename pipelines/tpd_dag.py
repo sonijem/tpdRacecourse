@@ -167,7 +167,6 @@ def load_source2():
         logger.info("Completed upserting course names")
 
     logger.info("Upserting horse names from runners data")
-    # Upsert all horse_names from the full runners file before chunking
     runners_objs = [json.loads(line) for line in runners_lines]
     runners_df = pd.DataFrame(runners_objs)
     with get_postgres_conn() as conn:
@@ -178,7 +177,7 @@ def load_source2():
         conn.commit()
         logger.info("Completed upserting horse names")
 
-    # Now process in chunks as before
+    logger.info("Processing racecards and runners data in chunks")
     for lines, is_runner in [(racecards_lines, False), (runners_lines, True)]:
         for chunk in range(0, len(lines), CHUNK_SIZE):
             json_objects = [json.loads(line) for line in lines[chunk:chunk+CHUNK_SIZE]]
