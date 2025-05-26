@@ -88,6 +88,23 @@ def load_source1():
     racecards_data = hook.download(bucket_name, 'source1/source1_racecards.csv').decode('utf-8')
     runners_data = hook.download(bucket_name, 'source1/source1_runners.csv').decode('utf-8')
 
+    # Upsert all course_names from the full racecards file before chunking
+    racecards_df = pd.read_csv(io.StringIO(racecards_data))
+    with get_postgres_conn() as conn:
+        cur = conn.cursor()
+        course_names = set(racecards_df['course_name'].unique())
+        upsert_names(cur, course_names, 'courses')
+        conn.commit()
+
+    # Upsert all horse_names from the full runners file before chunking
+    runners_df = pd.read_csv(io.StringIO(runners_data))
+    with get_postgres_conn() as conn:
+        cur = conn.cursor()
+        horse_names = set(runners_df['horse_name'].unique())
+        upsert_names(cur, horse_names, 'horses')
+        conn.commit()
+
+    # Now process in chunks as before
     for data, is_runner in [(racecards_data, False), (runners_data, True)]:
         df = pd.read_csv(io.StringIO(data))
         for chunk in range(0, len(df), CHUNK_SIZE):
@@ -98,6 +115,25 @@ def load_source2():
     racecards_lines = hook.download(bucket_name, 'source2/source2_racecards.json').decode('utf-8').splitlines()
     runners_lines = hook.download(bucket_name, 'source2/source2_runners.json').decode('utf-8').splitlines()
 
+    # Upsert all course_names from the full racecards file before chunking
+    racecards_objs = [json.loads(line) for line in racecards_lines]
+    racecards_df = pd.DataFrame(racecards_objs)
+    with get_postgres_conn() as conn:
+        cur = conn.cursor()
+        course_names = set(racecards_df['course_name'].unique())
+        upsert_names(cur, course_names, 'courses')
+        conn.commit()
+
+    # Upsert all horse_names from the full runners file before chunking
+    runners_objs = [json.loads(line) for line in runners_lines]
+    runners_df = pd.DataFrame(runners_objs)
+    with get_postgres_conn() as conn:
+        cur = conn.cursor()
+        horse_names = set(runners_df['horse_name'].unique())
+        upsert_names(cur, horse_names, 'horses')
+        conn.commit()
+
+    # Now process in chunks as before
     for lines, is_runner in [(racecards_lines, False), (runners_lines, True)]:
         for chunk in range(0, len(lines), CHUNK_SIZE):
             json_objects = [json.loads(line) for line in lines[chunk:chunk+CHUNK_SIZE]]
