@@ -47,6 +47,7 @@ def process_chunk(df, is_runner):
         if is_runner:
             horse_names = set(df['horse_name'].unique())
             upsert_names(cur, horse_names, 'horses')
+            conn.commit()  # Ensure horses are committed before SELECT/INSERT
 
             for _, row in df.iterrows():
                 cur.execute("SELECT horse_id FROM tpd_hourse_race.horses WHERE horse_name = %s", (row['horse_name'],))
@@ -62,6 +63,7 @@ def process_chunk(df, is_runner):
         else:
             course_names = set(df['course_name'].unique())
             upsert_names(cur, course_names, 'courses')
+            conn.commit()  # Ensure courses are committed before SELECT/INSERT
 
             for _, row in df.iterrows():
                 cur.execute("SELECT course_id FROM tpd_hourse_race.courses WHERE course_name = %s", (row['course_name'],))
