@@ -38,9 +38,10 @@ def process_chunk(df, is_runner):
         if is_runner:
             horse_names = set(df['horse_name'].unique())
             upsert_names(cur, horse_names, 'horses')
-            conn.commit()  # Ensure horses are committed before SELECT/INSERT
+            conn.commit()
 
             for _, row in df.iterrows():
+                # Always fetch horse_id after upsert
                 cur.execute("SELECT horse_id FROM tpd_hourse_race.horses WHERE horse_name = %s", (row['horse_name'],))
                 horse = cur.fetchone()
                 if horse is None:
@@ -54,14 +55,26 @@ def process_chunk(df, is_runner):
         else:
             course_names = set(df['course_name'].unique())
             upsert_names(cur, course_names, 'courses')
-            conn.commit()  # Ensure courses are committed before SELECT/INSERT
+            conn.commit()
 
             for _, row in df.iterrows():
-                cur.execute("SELECT course_id FROM tpd_hourse_race.courses WHERE course_name = %s", (row['course_name'],))
-                course = cur.fetchone()
-                if course is None:
-                    raise ValueError(f"Course '{row['course_name']}' not found in courses table.")
-                course_id = course[0]
+                # Use INSERT ... ON CONFLICT DO NOTHING RETURNING course_id
+                cur.execute("""
+                    INSERT INTO tpd_hourse_race.courses (course_name)
+                    VALUES (%s)
+                    ON CONFLICT (course_name) DO NOTHING
+                    RETURNING course_id
+                """, (row['course_name'],))
+                result = cur.fetchone()
+                if result:
+                    course_id = result[0]
+                else:
+                    # If not inserted, fetch the existing course_id
+                    cur.execute("SELECT course_id FROM tpd_hourse_race.courses WHERE course_name = %s", (row['course_name'],))
+                    course = cur.fetchone()
+                    if course is None:
+                        raise ValueError(f"Course '{row['course_name']}' not found in courses table after upsert.")
+                    course_id = course[0]
                 cur.execute("""
                     INSERT INTO races (race_id, post_time, course_id)
                     VALUES (%s, %s, %s)
