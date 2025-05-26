@@ -40,12 +40,16 @@ def upsert_names(cur, names, table):
         table: Name of the table to upsert into (e.g., 'courses', 'horses')
     """
     schema_table = f"tpd_hourse_race.{table}"
+    inserted_count = 0
     for name in names:
         cur.execute(f"""
             INSERT INTO {schema_table} ({table[:-1]}_name)
             VALUES (%s)
             ON CONFLICT ({table[:-1]}_name) DO NOTHING
         """, (name,))
+        if cur.rowcount == 1:
+            inserted_count += 1
+    logger.info(f"Inserted {inserted_count} new records into {schema_table}.")
 
 def process_chunk(df, is_runner):
     """
@@ -56,7 +60,7 @@ def process_chunk(df, is_runner):
     """
     with get_postgres_conn() as conn:
         cur = conn.cursor()
-
+        inserted_count = 0
         if is_runner:
             for _, row in df.iterrows():
                 logger.info(f"Processing runner: race_id={row['race_id']}, horse_name={row['horse_name']}, cloth_number={row['cloth_number']}")
@@ -72,6 +76,8 @@ def process_chunk(df, is_runner):
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (race_id, cloth_number) DO NOTHING
                 """, (row['race_id'], horse_id, int(row['cloth_number']), str(row['starting_price'])))
+                if cur.rowcount == 1:
+                    inserted_count += 1
         else:
             for _, row in df.iterrows():
                 logger.info(f"Processing race: race_id={row['race_id']}, course_name={row['course_name']}, post_time={row['post_time']}")
@@ -97,7 +103,9 @@ def process_chunk(df, is_runner):
                     VALUES (%s, %s, %s)
                     ON CONFLICT DO NOTHING
                 """, (row['race_id'], row['post_time'], course_id))
-
+                if cur.rowcount == 1:
+                    inserted_count += 1
+        logger.info(f"Inserted {inserted_count} new records into {'runners' if is_runner else 'races'} table for this chunk.")
         conn.commit()
 
 def load_source1():
