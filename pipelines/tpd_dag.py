@@ -68,7 +68,7 @@ def process_chunk(df, is_runner):
                         raise ValueError(f"Course '{row['course_name']}' not found in courses table after upsert.")
                     course_id = course[0]
                 cur.execute("""
-                    INSERT INTO races (race_id, post_time, course_id)
+                    INSERT INTO tpd_hourse_race.races (race_id, post_time, course_id)
                     VALUES (%s, %s, %s)
                     ON CONFLICT DO NOTHING
                 """, (row['race_id'], row['post_time'], course_id))
