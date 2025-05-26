@@ -42,11 +42,6 @@ ALTER TABLE tpd_hourse_race.races
   ADD CONSTRAINT races_course_id_fkey
   FOREIGN KEY (course_id) REFERENCES tpd_hourse_race.courses(course_id);
 
-ALTER TABLE tpd_hourse_race.runners DROP CONSTRAINT races_course_id_fkey;
-ALTER TABLE tpd_hourse_race.races
-  ADD CONSTRAINT races_course_id_fkey
-  FOREIGN KEY (course_id) REFERENCES tpd_hourse_race.courses(course_id);
-
 
 ALTER TABLE tpd_hourse_race.runners DROP CONSTRAINT runners_race_id_fkey;
 ALTER TABLE tpd_hourse_race.runners DROP CONSTRAINT runners_horse_id_fkey;
