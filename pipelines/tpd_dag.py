@@ -49,7 +49,10 @@ def process_chunk(df, is_runner):
 
             for _, row in df.iterrows():
                 cur.execute("SELECT horse_id FROM tpd_hourse_race.horses WHERE horse_name = %s", (row['horse_name'],))
-                horse_id = cur.fetchone()[0]
+                horse = cur.fetchone()
+                if horse is None:
+                    raise ValueError(f"Horse '{row['horse_name']}' not found in horses table.")
+                horse_id = horse[0]
                 cur.execute("""
                     INSERT INTO tpd_hourse_race.runners (race_id, horse_id, cloth_number, starting_price)
                     VALUES (%s, %s, %s, %s)
@@ -61,7 +64,10 @@ def process_chunk(df, is_runner):
 
             for _, row in df.iterrows():
                 cur.execute("SELECT course_id FROM tpd_hourse_race.courses WHERE course_name = %s", (row['course_name'],))
-                course_id = cur.fetchone()[0]
+                course = cur.fetchone()
+                if course is None:
+                    raise ValueError(f"Course '{row['course_name']}' not found in courses table.")
+                course_id = course[0]
                 cur.execute("""
                     INSERT INTO races (race_id, post_time, course_id)
                     VALUES (%s, %s, %s)
