@@ -35,3 +35,26 @@ CREATE TABLE tpd_hourse_race.runners (
 CREATE INDEX idx_runners_race_id ON tpd_hourse_race.runners(race_id);
 CREATE INDEX idx_runners_horse_id ON tpd_hourse_race.runners(horse_id);
 CREATE INDEX idx_races_post_time ON tpd_hourse_race.races(post_time);
+
+-- ALTER tables queries to update constraints 
+ALTER TABLE tpd_hourse_race.races DROP CONSTRAINT races_course_id_fkey;
+ALTER TABLE tpd_hourse_race.races
+  ADD CONSTRAINT races_course_id_fkey
+  FOREIGN KEY (course_id) REFERENCES tpd_hourse_race.courses(course_id);
+
+ALTER TABLE tpd_hourse_race.runners DROP CONSTRAINT races_course_id_fkey;
+ALTER TABLE tpd_hourse_race.races
+  ADD CONSTRAINT races_course_id_fkey
+  FOREIGN KEY (course_id) REFERENCES tpd_hourse_race.courses(course_id);
+
+
+ALTER TABLE tpd_hourse_race.runners DROP CONSTRAINT runners_race_id_fkey;
+ALTER TABLE tpd_hourse_race.runners DROP CONSTRAINT runners_horse_id_fkey;
+
+ALTER TABLE tpd_hourse_race.runners
+  ADD CONSTRAINT runners_race_id_fkey
+  FOREIGN KEY (race_id) REFERENCES tpd_hourse_race.races(race_id);
+
+ALTER TABLE tpd_hourse_race.runners
+  ADD CONSTRAINT runners_horse_id_fkey
+  FOREIGN KEY (horse_id) REFERENCES tpd_hourse_race.horses(horse_id);

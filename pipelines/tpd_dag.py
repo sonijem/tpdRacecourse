@@ -36,10 +36,6 @@ def process_chunk(df, is_runner):
         cur = conn.cursor()
 
         if is_runner:
-            horse_names = set(df['horse_name'].unique())
-            upsert_names(cur, horse_names, 'horses')
-            conn.commit()
-
             for _, row in df.iterrows():
                 # Always fetch horse_id after upsert
                 cur.execute("SELECT horse_id FROM tpd_hourse_race.horses WHERE horse_name = %s", (row['horse_name'],))
@@ -53,10 +49,6 @@ def process_chunk(df, is_runner):
                     ON CONFLICT (race_id, cloth_number) DO NOTHING
                 """, (row['race_id'], horse_id, int(row['cloth_number']), str(row['starting_price'])))
         else:
-            course_names = set(df['course_name'].unique())
-            upsert_names(cur, course_names, 'courses')
-            conn.commit()
-
             for _, row in df.iterrows():
                 # Use INSERT ... ON CONFLICT DO NOTHING RETURNING course_id
                 cur.execute("""
@@ -107,6 +99,7 @@ def load_source1():
     # Now process in chunks as before
     for data, is_runner in [(racecards_data, False), (runners_data, True)]:
         df = pd.read_csv(io.StringIO(data))
+        
         for chunk in range(0, len(df), CHUNK_SIZE):
             process_chunk(df.iloc[chunk:chunk+CHUNK_SIZE], is_runner)
 
