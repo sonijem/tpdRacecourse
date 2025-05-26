@@ -7,14 +7,6 @@ import pandas as pd
 import json
 import io
 
-# Config (should ideally be moved to Airflow Connections or Secret Manager)
-PG_CONFIG = {
-    'host': '34.89.77.153',
-    'port': 5432,
-    'dbname': 'tpd-postgres-uk',  
-    'user': 'postgres', 
-    'password': 'Godstay1!'  
-}
 bucket_name = 'data-engineering-ingestion'
 CHUNK_SIZE = 1000
 
@@ -27,8 +19,7 @@ dag = DAG(
 )
 
 def get_postgres_conn():
-    # Use Airflow's PostgresHook for connection management
-    hook = PostgresHook(postgres_conn_id='tpd_postgres')  # Set this Airflow connection in UI
+    hook = PostgresHook(postgres_conn_id='tpd_postgres')  
     return hook.get_conn()
 
 def upsert_names(cur, names, table):
