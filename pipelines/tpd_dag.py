@@ -32,9 +32,10 @@ def get_postgres_conn():
     return hook.get_conn()
 
 def upsert_names(cur, names, table):
+    schema_table = f"tpd_hourse_race.{table}"
     for name in names:
         cur.execute(f"""
-            INSERT INTO {table} ({table[:-1]}_name)
+            INSERT INTO {schema_table} ({table[:-1]}_name)
             VALUES (%s)
             ON CONFLICT ({table[:-1]}_name) DO NOTHING
         """, (name,))
